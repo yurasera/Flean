@@ -183,6 +183,27 @@ struct ContentView: View {
                 .padding(.vertical, 12)
                 .background(Color.black.opacity(0.3))
                 
+                // Thumbnail strip
+                if let allAssets = allAssets, allAssets.count > 0 {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            ForEach(0..<allAssets.count, id: \.self) { i in
+                                ThumbnailView(asset: allAssets.object(at: i))
+                                    .opacity(i == currentIndex ? 1.0 : 0.6)
+                                    .overlay(
+                                        i == currentIndex ? RoundedRectangle(cornerRadius: 4).stroke(Color.blue, lineWidth: 2) : nil
+                                    )
+                                    .onTapGesture {
+                                        loadImageAtIndex(i)
+                                    }
+                            }
+                        }
+                        .padding(.horizontal)
+                    }
+                    .frame(height: 60)
+                }
+                
+
                 // Button at bottom
                 PhotosPicker(selection: $photosPickerItem, matching: .images) {
                     Image(systemName: "photo.badge.plus")
@@ -211,3 +232,37 @@ struct ContentView: View {
 #Preview {
     ContentView()
 }
+
+// Thumbnail view
+struct ThumbnailView: View {
+    let asset: PHAsset
+    @State private var thumbnail: UIImage?
+    
+    var body: some View {
+        ZStack {
+            if let thumbnail {
+                Image(uiImage: thumbnail)
+                    .resizable()
+                    .scaledToFill()
+            } else {
+                Color.gray
+            }
+        }
+        .frame(width: 50, height: 50)
+        .cornerRadius(4)
+        .clipped()
+        .onAppear {
+            loadThumbnail()
+        }
+    }
+    
+    private func loadThumbnail() {
+        let manager = PHImageManager.default()
+        let options = PHImageRequestOptions()
+        options.deliveryMode = .fastFormat
+        manager.requestImage(for: asset, targetSize: CGSize(width: 50, height: 50), contentMode: .aspectFill, options: options) { image, _ in
+            thumbnail = image
+        }
+    }
+}
+
