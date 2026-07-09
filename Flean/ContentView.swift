@@ -12,21 +12,53 @@ import Photos
 struct ContentView: View {
     @State private var selectedImage: UIImage?
     @State private var photosPickerItem: PhotosPickerItem?
+    @State private var currentAsset: PHAsset?
+    @State private var allAssets: PHFetchResult<PHAsset>?
+    @State private var currentIndex: Int = 0
+    @State private var dragOffset: CGFloat = 0
     
-    func loadLatestImage() {
+    func loadAllImages() {
         let fetchOptions = PHFetchOptions()
         fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
+        allAssets = PHAsset.fetchAssets(with: .image, options: fetchOptions)
+        loadImageAtIndex(0)
+    }
+    
+    func loadImageAtIndex(_ index: Int) {
+        guard let allAssets = allAssets, index < allAssets.count else { return }
         
-        let fetchResult = PHAsset.fetchAssets(with: .image, options: fetchOptions)
-        
-        guard let latestAsset = fetchResult.firstObject else { return }
+        currentIndex = index
+        let asset = allAssets.object(at: index)
+        currentAsset = asset
         
         let imageManager = PHImageManager.default()
         let requestOptions = PHImageRequestOptions()
         requestOptions.isNetworkAccessAllowed = true
+        requestOptions.deliveryMode = .highQualityFormat
         
-        imageManager.requestImage(for: latestAsset, targetSize: CGSize(width: 400, height: 400), contentMode: .aspectFit, options: requestOptions) { image, _ in
+        imageManager.requestImage(for: asset, targetSize: CGSize(width: 800, height: 800), contentMode: .aspectFit, options: requestOptions) { image, _ in
             selectedImage = image
+        }
+    }
+    
+    func deleteCurrentImage() {
+        guard let asset = currentAsset else { return }
+        
+        PHPhotoLibrary.shared().performChanges({
+            PHAssetChangeRequest.deleteAssets([asset] as NSArray)
+        }) { success, error in
+            if success {
+                DispatchQueue.main.async {
+                    loadImageAtIndex(currentIndex)
+                }
+            }
+        }
+    }
+    
+    func keepAndShowNext() {
+        let nextIndex = currentIndex + 1
+        if let allAssets = allAssets, nextIndex < allAssets.count {
+            loadImageAtIndex(nextIndex)
         }
     }
     
@@ -38,12 +70,99 @@ struct ContentView: View {
                     .scaledToFit()
                     .frame(maxHeight: 400)
                     .cornerRadius(12)
+                    .offset(x: dragOffset)
+                    .rotationEffect(.degrees(dragOffset / 20))
+                    .gesture(
+                        DragGesture()
+                            .onChanged { value in
+                                dragOffset = value.translation.width
+                            }
+                            .onEnded { value in
+                                if value.translation.width < -100 {
+                                    // Swipe left - delete
+                                    withAnimation(.easeOut(duration: 0.3)) {
+                                        dragOffset = -500
+                                    }
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                        deleteCurrentImage()
+                                        dragOffset = 0
+                                    }
+                                } else if value.translation.width > 100 {
+                                    // Swipe right - keep and next
+                                    withAnimation(.easeOut(duration: 0.3)) {
+                                        dragOffset = 500
+                                    }
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                        keepAndShowNext()
+                                        dragOffset = 0
+                                    }
+                                } else {
+                                    // Return to center
+                                    withAnimation(.spring()) {
+                                        dragOffset = 0
+                                    }
+                                }
+                            }
+                    )
+                    .overlay(
+                        HStack {
+                            if dragOffset < -50 {
+                                VStack {
+                                    Image(systemName: "trash.fill")
+                                        .font(.system(size: 40))
+                                        .foregroundColor(.red)
+                                    Text("Delete")
+                                        .font(.headline)
+                                        .foregroundColor(.red)
+                                }
+                                .opacity(min(abs(dragOffset) / 100, 1))
+                                Spacer()
+                            } else if dragOffset > 50 {
+                                Spacer()
+                                VStack {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .font(.system(size: 40))
+                                        .foregroundColor(.green)
+                                    Text("Keep")
+                                        .font(.headline)
+                                        .foregroundColor(.green)
+                                }
+                                .opacity(min(abs(dragOffset) / 100, 1))
+                            }
+                        }
+                        .padding(.horizontal, 40)
+                    )
             } else {
                 Image(systemName: "photo")
                     .imageScale(.large)
                     .foregroundStyle(.tint)
                     .frame(height: 200)
             }
+            
+            HStack(spacing: 20) {
+                VStack {
+                    Image(systemName: "arrow.left")
+                    Text("Delete")
+                        .font(.caption)
+                }
+                .foregroundColor(.red)
+                
+                Spacer()
+                
+                Text("Swipe to sort")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                
+                Spacer()
+                
+                VStack {
+                    Image(systemName: "arrow.right")
+                    Text("Keep")
+                        .font(.caption)
+                }
+                .foregroundColor(.green)
+            }
+            .padding(.horizontal)
             
             PhotosPicker(selection: $photosPickerItem, matching: .images) {
                 Label("Select from Gallery", systemImage: "photo.badge.plus")
@@ -58,7 +177,7 @@ struct ContentView: View {
         }
         .padding()
         .onAppear {
-            loadLatestImage()
+            loadAllImages()
         }
         .onChange(of: photosPickerItem) { oldValue, newValue in
             Task {
