@@ -74,13 +74,14 @@ struct ContentView: View {
     }
     
     var body: some View {
-        VStack(spacing: 16) {
+        ZStack {
+            // Full width image with aspect fit
             if let selectedImage {
                 Image(uiImage: selectedImage)
                     .resizable()
                     .scaledToFit()
-                    .frame(maxHeight: 400)
-                    .cornerRadius(12)
+                    .frame(maxWidth: .infinity)
+                    .ignoresSafeArea(edges: .horizontal)
                     .offset(x: dragOffset)
                     .rotationEffect(.degrees(dragOffset / 20))
                     .gesture(
@@ -147,46 +148,52 @@ struct ContentView: View {
                 Image(systemName: "photo")
                     .imageScale(.large)
                     .foregroundStyle(.tint)
-                    .frame(height: 200)
+                    .ignoresSafeArea()
             }
             
-            HStack(spacing: 20) {
-                VStack {
-                    Image(systemName: "arrow.left")
-                    Text("Delete")
-                        .font(.caption)
-                }
-                .foregroundColor(.red)
-                
+            // Controls overlay at bottom
+            VStack {
                 Spacer()
                 
-                Text("Swipe to sort")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                
-                Spacer()
-                
-                VStack {
-                    Image(systemName: "arrow.right")
-                    Text("Keep")
-                        .font(.caption)
+                // Swipe instructions
+                HStack(spacing: 20) {
+                    VStack {
+                        Image(systemName: "arrow.left")
+                        Text("Delete")
+                            .font(.caption)
+                    }
+                    .foregroundColor(.red)
+                    
+                    Spacer()
+                    
+                    Text("Swipe to sort")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                    
+                    Spacer()
+                    
+                    VStack {
+                        Image(systemName: "arrow.right")
+                        Text("Keep")
+                            .font(.caption)
+                    }
+                    .foregroundColor(.green)
                 }
-                .foregroundColor(.green)
+                .padding(.horizontal)
+                .padding(.vertical, 12)
+                .background(Color.black.opacity(0.3))
+                
+                // Button at bottom
+                PhotosPicker(selection: $photosPickerItem, matching: .images) {
+                    Image(systemName: "photo.badge.plus")
+                        .font(.system(size: 16))
+                        .padding(8)
+                        .foregroundColor(.blue)
+                }
+                .padding(.bottom, 16)
             }
-            .padding(.horizontal)
-            
-            PhotosPicker(selection: $photosPickerItem, matching: .images) {
-                Label("Select from Gallery", systemImage: "photo.badge.plus")
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(.blue)
-                    .foregroundStyle(.white)
-                    .cornerRadius(8)
-            }
-            
-            Spacer()
+            .ignoresSafeArea(edges: .bottom)
         }
-        .padding()
         .onAppear {
             loadAllImages()
         }
