@@ -10,9 +10,22 @@
 		4D0E5A492FFCBF8600CAAB8B /* Flean.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Flean.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		4D0E5A752FFF258300CAAB8B /* Exceptions for "Flean" folder in "Flean" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 4D0E5A482FFCBF8600CAAB8B /* Flean */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		4D0E5A4B2FFCBF8600CAAB8B /* Flean */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				4D0E5A752FFF258300CAAB8B /* Exceptions for "Flean" folder in "Flean" target */,
+			);
 			path = Flean;
 			sourceTree = "<group>";
 		};
@@ -256,6 +269,8 @@
 				DEVELOPMENT_TEAM = 6K98GXCG5L;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Flean/Info.plist;
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Aplikasi membutuhkan akses galeri untuk menampilkan foto.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -288,6 +303,8 @@
 				DEVELOPMENT_TEAM = 6K98GXCG5L;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Flean/Info.plist;
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Aplikasi membutuhkan akses galeri untuk menampilkan foto.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
