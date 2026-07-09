@@ -49,7 +49,18 @@ struct ContentView: View {
         }) { success, error in
             if success {
                 DispatchQueue.main.async {
-                    loadImageAtIndex(currentIndex)
+                    // Reload assets after deletion
+                    let fetchOptions = PHFetchOptions()
+                    fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
+                    allAssets = PHAsset.fetchAssets(with: .image, options: fetchOptions)
+                    
+                    // Show next image (or previous if at end)
+                    if currentIndex < (allAssets?.count ?? 0) {
+                        loadImageAtIndex(currentIndex)
+                    } else if (allAssets?.count ?? 0) > 0 {
+                        // If at the end, show the last image
+                        loadImageAtIndex((allAssets?.count ?? 0) - 1)
+                    }
                 }
             }
         }
